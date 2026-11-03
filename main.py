@@ -1,6 +1,6 @@
 import sys
 import requests
-from PySide6.QtWidgets import QApplication, QTableWidgetItem
+from PySide6.QtWidgets import QApplication, QTableWidgetItem, QMessageBox
 from PySide6.QtUiTools import QUiLoader
 
 def calcular_totales():
@@ -10,7 +10,6 @@ def calcular_totales():
         if item_importe and item_importe.text().strip(): 
             total += float(item_importe.text())
     
-    # Lógica de IVA invertido (El precio ya incluye todo)
     iva = total * 0.16
     subtotal = total - iva
     
@@ -38,7 +37,7 @@ def agregar_producto():
                     
                     # Freno de stock si ya está en el carrito
                     if cant_actual >= stock_disponible:
-                        print(f"¡Límite de stock! Solo tienes {stock_disponible} unidades de {producto['descripcion']}.")
+                        QMessageBox.warning(ventana, "Límite de stock", f"Solo tienes {stock_disponible} unidades de {producto['descripcion']}.")
                         ventana.txt_codigo.clear()
                         return
                         
@@ -53,7 +52,7 @@ def agregar_producto():
                     return 
             
             if stock_disponible < 1:
-                print(f"El producto {producto['descripcion']} está agotado.")
+                QMessageBox.warning(ventana, "Agotado", f"El producto {producto['descripcion']} está agotado.")
                 ventana.txt_codigo.clear()
                 return
 
@@ -69,16 +68,16 @@ def agregar_producto():
             
             calcular_totales()
         else:
-            print("Error: Producto no encontrado en la BD")
+            QMessageBox.warning(ventana, "Error de búsqueda", "Producto no encontrado en la base de datos.")
             
     except requests.exceptions.RequestException:
-        print("Error: Conexión fallida. Revisa si el backend de Belén está corriendo y no está pausado.")
+        QMessageBox.critical(ventana, "Falla de conexión", "Conexión fallida. Revisa si el backend de Belén está corriendo y no está pausado.")
         
     ventana.txt_codigo.clear()
 
 def guardar_venta():
     if ventana.tabla_productos.rowCount() == 0:
-        print("El carrito está vacío.")
+        QMessageBox.warning(ventana, "Carrito vacío", "El carrito está vacío, no hay artículos para cobrar.")
         return
 
     try:
@@ -90,7 +89,7 @@ def guardar_venta():
         detalles = []
         for i in range(ventana.tabla_productos.rowCount()):
             celda_id = ventana.tabla_productos.item(i, 0)
-            if not celda_id: continue # Evita errores si hay filas vacías
+            if not celda_id: continue
             
             detalles.append({
                 "producto_id": int(celda_id.text()),
@@ -106,23 +105,22 @@ def guardar_venta():
             "detalles": detalles
         }
         
-        # Mandamos a la API de ventas de tu amiga
+        # Mandamos a la API 
         respuesta = requests.post("http://127.0.0.1:8000/ventas/", json=venta_data, timeout=3)
         
         if respuesta.status_code == 200:
-            print(f"¡Venta guardada con éxito! Folio: {respuesta.json()['folio']}")
-            # Limpiamos la interfaz para el siguiente cliente
+            QMessageBox.information(ventana, "Venta Exitosa", f"¡Venta guardada con éxito! Folio: {respuesta.json()['folio']}")
             ventana.tabla_productos.setRowCount(0)
             ventana.text_subtotal.setText("$0.00")
             ventana.txt_IVA.setText("$0.00")
             ventana.txt_total.setText("$0.00")
         else:
-            print("Error al guardar la venta:", respuesta.json())
+            QMessageBox.critical(ventana, "Error al guardar", f"Error del servidor: {respuesta.json()}")
             
     except requests.exceptions.RequestException:
-        print("Error de conexión al intentar guardar.")
+        QMessageBox.critical(ventana, "Falla de red", "Error de conexión al intentar guardar. Verifica el backend.")
     except Exception as e:
-        print("Error interno:", e)
+        QMessageBox.critical(ventana, "Error interno", f"Error interno en la aplicación: {str(e)}")
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
