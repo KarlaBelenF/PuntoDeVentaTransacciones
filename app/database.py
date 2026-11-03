@@ -1,7 +1,7 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 
-SQLALCHEMY_DATABASE_URL = "mysql+pymysql://root:root@localhost:3306/punto_venta" # sqlalchemy es el ORM que nos permite interactuar con la base de datos de manera más sencilla y estructurada. pymysql es el driver que permite a SQLAlchemy conectarse a MySQL.
+SQLALCHEMY_DATABASE_URL = "mysql+pymysql://root:Mamarremamarrexd@localhost:3306/punto_venta" # sqlalchemy es el ORM que nos permite interactuar con la base de datos de manera más sencilla y estructurada. pymysql es el driver que permite a SQLAlchemy conectarse a MySQL.
 
 engine = create_engine(SQLALCHEMY_DATABASE_URL) # Crea el motor de la base de datos, que es responsable de gestionar las conexiones y ejecutar las consultas SQL.
 # Crea una clase de sesión que se utilizará para interactuar con la base de datos.
